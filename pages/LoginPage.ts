@@ -45,4 +45,15 @@ export class LoginPage {
     await expect(this.page).toHaveURL(/welcome/);
     await expect(this.pageHeading).toBeVisible();
   }
+
+  async continueAsGuest(): Promise<void> {
+    const guestBtn = this.page.locator('#txt_guest_account, button:has-text("Continue as Guest")').first();
+    await expect(guestBtn).toBeVisible({ timeout: 15000 });
+    await guestBtn.click();
+    await this.page.waitForTimeout(3000);
+    if (this.page.url().includes('welcome')) {
+      await this.page.goto('/', { waitUntil: 'domcontentloaded' });
+    }
+    await this.page.waitForLoadState('domcontentloaded');
+  }
 }

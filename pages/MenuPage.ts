@@ -18,10 +18,8 @@ export class MenuPage {
   }
 
   async verifyMenuLoaded(): Promise<void> {
-    if (this.page.url().includes('order-info')) {
-      await this.page.waitForURL(/menu/, { timeout: 15000 }).catch(async () => {
-        await this.page.goto('/menu/carvel-qu-sandbox-000', { waitUntil: 'domcontentloaded' });
-      });
+    if (this.page.url().includes('order-info') || this.page.url().includes('store-search')) {
+      await this.page.waitForURL(/menu/, { timeout: 20000 });
     }
     await expect(this.page).toHaveURL(/menu/);
     await expect(this.iceCreamCategory).toBeVisible({ timeout: 15000 });

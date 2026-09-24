@@ -1,9 +1,9 @@
 {
   "pickupStore": {
-    "name": "Carvel Qu Sandbox",
-    "address": "26 Broadway, New York, NY 10004",
-    "searchQuery": "26 Broadway, New York, NY 10004",
-    "zipCode": "10004",
-    "cityState": "New York, NY"
+    "name": "Linked Sandbox Carvel Vendor",
+    "address": "1005 S Marine Corps Dr, Tamuning, GU 96913",
+    "searchQuery": "1005 S Marine Corps Dr, Tamuning, 96913, Guam",
+    "zipCode": "96913",
+    "cityState": "Tamuning, GU"
   }
 }

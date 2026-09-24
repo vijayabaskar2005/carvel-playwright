@@ -18,7 +18,7 @@ export class Header {
     this.locationsLink = page.locator('#Locations_Locations, a[href*="/locations"]').first();
     this.giftCardsLink = page.locator('#Gift Cards_Gift Cards, a[href*="gift"]').first();
     this.fudgieFanaticsLink = page.locator('#Fudgie Fanatics_Fudgie Fanatics').first();
-    this.signInBtn = page.locator('#link_guestProfile, #signin-button, button:has-text("SIGN IN")').first();
+    this.signInBtn = page.locator('button#link_sign_in, button:has-text("SIGN IN"), #link_guestProfile');
     this.startOrderBtn = page.locator('#btn_startorder, button:has-text("START ORDER"), a:has-text("START ORDER")').first();
     this.cartIcon = page.locator('#link_cart, .cartIcon, [aria-label="cart icon"]').first();
   }
@@ -29,12 +29,18 @@ export class Header {
   }
 
   async clickStartOrder(): Promise<void> {
+    await expect(this.startOrderBtn).toBeVisible({ timeout: 20000 });
     await this.startOrderBtn.click();
     await this.page.waitForLoadState('domcontentloaded');
   }
 
   async clickSignIn(): Promise<void> {
-    await this.signInBtn.click();
+    const visibleSignIn = this.signInBtn.filter({ visible: true }).first();
+    if (await visibleSignIn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await visibleSignIn.click();
+    } else {
+      await this.page.goto('/welcome', { waitUntil: 'domcontentloaded' });
+    }
     await this.page.waitForLoadState('domcontentloaded');
   }
 

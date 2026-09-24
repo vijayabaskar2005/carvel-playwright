@@ -4,7 +4,7 @@ import { testStoreData, testProductData } from '../../utils/testData';
 test.describe('Smoke 7 – Add to Cart & Cart Validation', () => {
   test('smoke: user can add customized product to cart and verify cart contents', async ({ storeLocatorPage, menuPage, productListingPage, productDetailPage, cartPage }) => {
     await storeLocatorPage.navigate();
-    await storeLocatorPage.searchAndSelectStore(testStoreData.address, testStoreData.name);
+    await storeLocatorPage.searchAndSelectStore(testStoreData.searchQuery, testStoreData.name, testStoreData.address);
 
     await menuPage.selectCategory(testProductData.categoryName);
     await productListingPage.selectProduct(testProductData.productName);
@@ -15,5 +15,8 @@ test.describe('Smoke 7 – Add to Cart & Cart Validation', () => {
 
     await cartPage.verifyCartLoaded();
     await cartPage.verifyStoreInCart(testStoreData.name);
+    await cartPage.verifyAddressInCart(testStoreData.address);
+    await cartPage.verifyProductInCart(testProductData.productName);
+    await cartPage.verifyPriceDisplayed();
   });
 });
