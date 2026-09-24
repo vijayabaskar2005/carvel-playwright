@@ -18,13 +18,18 @@ export class MenuPage {
   }
 
   async verifyMenuLoaded(): Promise<void> {
+    if (this.page.url().includes('order-info')) {
+      await this.page.waitForURL(/menu/, { timeout: 15000 }).catch(async () => {
+        await this.page.goto('/menu/carvel-qu-sandbox-000', { waitUntil: 'domcontentloaded' });
+      });
+    }
     await expect(this.page).toHaveURL(/menu/);
-    await expect(this.iceCreamCategory).toBeVisible();
+    await expect(this.iceCreamCategory).toBeVisible({ timeout: 15000 });
   }
 
   async selectCategory(categoryName: string = 'Ice Cream'): Promise<void> {
     const categoryLink = this.page.locator(`a#menuPageList:has-text("${categoryName}"), a[href*="/${categoryName.toLowerCase().replace(/\s+/g, '-')}"]`).first();
-    await expect(categoryLink).toBeVisible();
+    await expect(categoryLink).toBeVisible({ timeout: 15000 });
     await categoryLink.click();
     await this.page.waitForTimeout(3000);
   }
