@@ -1,0 +1,54 @@
+name: Playwright Smoke Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  smoke-tests:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: carvel-playwright/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./carvel-playwright
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: ./carvel-playwright
+
+      - name: Run Playwright Smoke Tests
+        env:
+          BASE_URL: ${{ secrets.BASE_URL || 'https://car.uat.focusbrands.com' }}
+          CARVEL_USERNAME: ${{ secrets.CARVEL_USERNAME }}
+          CARVEL_PASSWORD: ${{ secrets.CARVEL_PASSWORD }}
+        run: npx playwright test tests/smoke
+        working-directory: ./carvel-playwright
+
+      - name: Upload Playwright HTML Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-html-report
+          path: carvel-playwright/playwright-report/
+          retention-days: 30
+
+      - name: Upload Test Evidence on Failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-failure-evidence
+          path: carvel-playwright/test-results/
+          retention-days: 30

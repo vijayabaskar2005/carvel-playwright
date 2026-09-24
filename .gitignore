@@ -1,0 +1,12 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+screenshots/*.png
+screenshots/*.json
+screenshots/*.html
+explore*.js
+test*.js
+.env
+*.log

@@ -1,0 +1,6 @@
+{
+  "testUser": {
+    "usernameEnvKey": "CARVEL_USERNAME",
+    "passwordEnvKey": "CARVEL_PASSWORD"
+  }
+}

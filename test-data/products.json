@@ -1,0 +1,10 @@
+{
+  "testProduct": {
+    "category": "ice-cream",
+    "categoryName": "Ice Cream",
+    "productName": "SCOOPED ICE CREAM",
+    "size": "Small Cup",
+    "flavor": "Vanilla",
+    "priceStarting": "$5.79"
+  }
+}
