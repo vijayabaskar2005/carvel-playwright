@@ -2,7 +2,7 @@ import { test, expect } from '../../fixtures/testFixtures';
 import { testStoreData } from '../../utils/testData';
 
 test.describe('Smoke 4 – Pickup & Pickup Later Scheduling', () => {
-  test('smoke: user can select Linked Sandbox Carvel Vendor and configure Pickup Later with dynamic date/time', async ({ storeLocatorPage, pickupPage, page }) => {
+  test('smoke: user can select first store (Carvel Revel Demo 88) and configure Pickup Later with dynamic date/time', async ({ storeLocatorPage, pickupPage, page }) => {
     await storeLocatorPage.navigate();
     await storeLocatorPage.searchAndSelectStore(testStoreData.searchQuery, testStoreData.name, testStoreData.address);
     await storeLocatorPage.verifyStoreSelected(testStoreData.name);
