@@ -19,7 +19,11 @@ export class MenuPage {
 
   async verifyMenuLoaded(): Promise<void> {
     if (this.page.url().includes('order-info') || this.page.url().includes('store-search')) {
-      await this.page.waitForURL(/menu/, { timeout: 20000 });
+      const confirmBtn = this.page.locator('#orderInfoConfirmBtn, [data-testid="orderInfoConfirmBtn"], button:has-text("CONFIRM")').first();
+      if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await confirmBtn.click({ force: true }).catch(() => {});
+      }
+      await this.page.waitForURL(/menu/, { timeout: 25000 });
     }
     await expect(this.page).toHaveURL(/menu/);
     await expect(this.iceCreamCategory).toBeVisible({ timeout: 15000 });

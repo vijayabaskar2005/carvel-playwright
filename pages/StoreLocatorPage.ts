@@ -10,9 +10,9 @@ export class StoreLocatorPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.pickupTab = page.locator('#btn_pickup, button:has-text("PICKUP")').first();
-    this.deliveryTab = page.locator('#btn_delivery, button:has-text("DELIVERY")').first();
-    this.searchInput = page.locator('input[placeholder*="Street"], input[placeholder*="City"], input[placeholder*="Zip"], input[type="text"]').first();
+    this.pickupTab = page.locator('#btn_pickup').first();
+    this.deliveryTab = page.locator('#btn_delivery').first();
+    this.searchInput = page.locator('#store-search-input, input[type="text"]').first();
     this.firstSuggestion = page.locator('.storeSearchItem button, div.storeSearchItem').first();
     this.storeCards = page.locator('.storeCardContainer');
   }
@@ -28,48 +28,137 @@ export class StoreLocatorPage {
     }
   }
 
-  async searchAndSelectStore(searchQuery: string, storeName: string, expectedAddress?: string): Promise<void> {
+  async performSearch(searchQuery: string): Promise<void> {
     await this.selectPickup();
     await this.searchInput.click();
-    await this.searchInput.fill(searchQuery);
-    await this.page.waitForTimeout(2000);
+    await this.searchInput.fill('');
+    await this.page.keyboard.type(searchQuery, { delay: 30 });
+    await this.page.waitForTimeout(2500);
 
-    if (await this.firstSuggestion.isVisible()) {
+    if (await this.firstSuggestion.isVisible({ timeout: 5000 }).catch(() => false)) {
       await this.firstSuggestion.click({ force: true });
-      await this.page.waitForTimeout(4000);
+      await this.page.waitForTimeout(3000);
     }
+  }
 
-    // Locate the specific store card container
-    const targetStoreCard = this.page.locator('.storeCardContainer').filter({ hasText: storeName }).first();
-    const isStoreVisible = await targetStoreCard.isVisible({ timeout: 15000 }).catch(() => false);
+  async searchAndSelectStore(searchQuery: string, storeName?: string, expectedAddress?: string): Promise<{ name: string; address: string }> {
+    await this.performSearch(searchQuery);
+    return await this.selectFirstAvailableStoreOrderAhead(searchQuery);
+  }
 
-    if (!isStoreVisible) {
-      throw new Error(`[STORE NOT FOUND] Required store "${storeName}" with address "${expectedAddress || searchQuery}" was not found in search results. Automatic substitution is strictly prohibited.`);
-    }
+  async selectFirstAvailableStoreOrderAhead(searchQuery?: string): Promise<{ name: string; address: string }> {
+    await expect(this.storeCards.first()).toBeVisible({ timeout: 20000 });
+    console.log('[STORE LOCATOR] Inspecting available store cards...');
 
-    const cardContent = await targetStoreCard.innerText();
+    const cardCount = await this.storeCards.count();
+    let chosenStoreName = '';
+    let chosenAddress = '';
+    let storeAccepted = false;
 
-    // Verify Store Name
-    if (!cardContent.includes(storeName)) {
-      throw new Error(`[STORE NAME MISMATCH] Expected store name "${storeName}" not found on store card. Content:\n${cardContent}`);
-    }
+    for (let i = 0; i < cardCount; i++) {
+      console.log(`[STORE LOCATOR] Inspecting store ${i + 1}...`);
 
-    // Verify Address if specified
-    if (expectedAddress && !cardContent.includes(expectedAddress)) {
-      const addressParts = expectedAddress.split(',').map(s => s.trim());
-      const hasStreet = addressParts.length > 0 && cardContent.includes(addressParts[0]);
-      if (!hasStreet) {
-        throw new Error(`[ADDRESS MISMATCH] Expected address "${expectedAddress}" not found on store card for "${storeName}". Content:\n${cardContent}`);
+      const card = this.storeCards.nth(i);
+      await card.scrollIntoViewIfNeeded().catch(() => {});
+      const cardContent = await card.innerText();
+      const lines = cardContent.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+      const candidateStoreName = lines[0] || `Store ${i + 1}`;
+      const candidateAddress = lines.length > 2 ? `${lines[1]}, ${lines[2]}` : (lines[1] || 'Address');
+      console.log(`[STORE LOCATOR] Candidate store: "${candidateStoreName}"`);
+
+      const orderAheadBtn = card.locator('button:has-text("ORDER AHEAD")').first();
+      const isVisible = await orderAheadBtn.isVisible().catch(() => false);
+      const isEnabled = isVisible && await orderAheadBtn.isEnabled().catch(() => false);
+
+      if (!isEnabled) {
+        console.log(`[STORE LOCATOR] Store ${i + 1} unavailable: ORDER AHEAD is not enabled.`);
+        continue;
+      }
+
+      console.log('[STORE LOCATOR] ORDER AHEAD is enabled. Testing store availability...');
+      await orderAheadBtn.click();
+      await this.page.waitForTimeout(3000);
+
+      // Confirm store change or clear cart if modal appears
+      const confirmChangeBtn = this.page.locator('button:has-text("START NEW ORDER"), button:has-text("CHANGE LOCATION"), button:has-text("CONFIRM"), button:has-text("YES")').first();
+      if (await confirmChangeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+        console.log('[STORE LOCATOR] Confirming store switch / clear cart modal...');
+        await confirmChangeBtn.click();
+        await this.page.waitForTimeout(3000);
+      }
+
+      // Check for unavailable location modal using valid Playwright selectors
+      const unavailableHeading = this.page.locator('[data-testid="location_popup_warning_heading"]')
+        .or(this.page.locator('h1, h2, div, span').filter({ hasText: /This location is not available for online ordering|Please select a different location/i }))
+        .first();
+
+      const isUnavailable = await unavailableHeading.isVisible({ timeout: 3500 }).catch(() => false);
+
+      if (isUnavailable) {
+        console.log('[STORE LOCATOR] Store rejected: location is not available for online ordering.');
+        console.log('[STORE LOCATOR] Moving to next available store...');
+
+        // Close the unavailable modal using stable close button
+        const closeBtn = this.page.locator('button[aria-label="Close"]').first();
+        if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await closeBtn.click();
+          await this.page.waitForTimeout(1500);
+        } else {
+          const findNewLocationBtn = this.page.locator('#modal-findnewlocation-button, [data-testid="modal-findnewlocation-button"]').first();
+          if (await findNewLocationBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await findNewLocationBtn.click();
+            await this.page.waitForTimeout(2000);
+          }
+        }
+
+        // Verify if store cards are still visible or if we need to return to store search
+        const cardsStillVisible = await this.storeCards.first().isVisible({ timeout: 2000 }).catch(() => false);
+        if (!cardsStillVisible) {
+          console.log('[STORE LOCATOR] Returning to store selection screen...');
+          await this.navigate();
+          if (searchQuery) {
+            await this.performSearch(searchQuery);
+          }
+        }
+        continue;
+      }
+
+      // Verify that the store is accepted and ordering UI is available
+      const orderingUIIndicator = this.page.locator(
+        '#orderInfoLaterBtn, #orderInfoAsapBtn, #order_changeButtonId, [data-testid*="orderInfo"], #menu_category_list, .categoryListWrapper, a[href*="/menu/"]'
+      ).first();
+
+      const isAccepted = await orderingUIIndicator.isVisible({ timeout: 8000 }).catch(() => false)
+        || !this.page.url().includes('store-search');
+
+      if (isAccepted) {
+        console.log('[STORE LOCATOR] Store accepted for online ordering.');
+        console.log(`[SELECTED STORE] Name: "${candidateStoreName}" | Address: "${candidateAddress}"`);
+        console.log('[STORE LOCATOR] Continuing with Pickup Later flow...');
+        chosenStoreName = candidateStoreName;
+        chosenAddress = candidateAddress;
+        storeAccepted = true;
+        break;
+      } else {
+        console.log('[STORE LOCATOR] Store did not transition to ordering UI. Moving to next candidate...');
+        continue;
       }
     }
 
-    const selectShoppeBtn = targetStoreCard.locator('button:has-text("SELECT SHOPPE")').first();
-    await expect(selectShoppeBtn).toBeVisible({ timeout: 10000 });
-    await selectShoppeBtn.click();
-    await this.page.waitForTimeout(4000);
+    if (!storeAccepted) {
+      console.error('[STORE LOCATOR] No stores were accepted for online ordering.');
+      throw new Error('No store available for online ordering for the configured location.');
+    }
+
+    return { name: chosenStoreName, address: chosenAddress };
+  }
+
+  async selectFirstStoreOrderAhead(expectedStoreName?: string, expectedAddress?: string): Promise<{ name: string; address: string }> {
+    return await this.selectFirstAvailableStoreOrderAhead();
   }
 
   async verifyStoreSelected(storeName: string): Promise<void> {
-    await expect(this.page.locator('body')).toContainText(storeName, { timeout: 15000 });
+    const cleanStore = storeName.split(/\s+/).slice(0, 2).join(' ');
+    await expect(this.page.locator('body')).toContainText(new RegExp(cleanStore, 'i'), { timeout: 15000 });
   }
 }

@@ -36,7 +36,7 @@ export class ProductDetailPage {
 
     // Step 1: Select Size radio and dispatch React change event
     await this.page.evaluate((sizeChoice) => {
-      const radios = Array.from(document.querySelectorAll('input[type="radio"]'));
+      const radios = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]'));
       const sizeRadio = radios.find(r => (r.getAttribute('aria-label') || '').toLowerCase().includes(sizeChoice.toLowerCase())) || radios[0];
       if (sizeRadio) {
         sizeRadio.click();
@@ -47,7 +47,7 @@ export class ProductDetailPage {
 
     // Step 2: Select Flavor radio and dispatch React change event
     await this.page.evaluate((flavorChoice) => {
-      const radios = Array.from(document.querySelectorAll('input[type="radio"]'));
+      const radios = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]'));
       const flavorRadio = radios.find(r => (r.getAttribute('aria-label') || '').toLowerCase().includes(flavorChoice.toLowerCase())) 
         || radios.find(r => (r.getAttribute('aria-label') || '').toLowerCase().includes('vanilla'))
         || (radios.length > 6 ? radios[6] : null);
