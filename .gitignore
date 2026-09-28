@@ -10,3 +10,4 @@ explore*.js
 test*.js
 .env
 *.log
+*.png
