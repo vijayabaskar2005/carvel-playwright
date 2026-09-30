@@ -3,11 +3,15 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+reports/excel/
 screenshots/*.png
 screenshots/*.json
 screenshots/*.html
 explore*.js
-test*.js
+/test_*.js
 .env
 *.log
 *.png
+*.webm
+artifacts/executions/
+artifacts/*.zip

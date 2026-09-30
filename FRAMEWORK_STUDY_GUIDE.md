@@ -451,7 +451,6 @@ async clickStartOrder(): Promise<void> {
   try {
     await btn.click({ timeout: 7000 });
   } catch (err: any) {
-    console.log('[HEADER] Start Order button detached during React re-render. Re-resolving and retrying click...');
     await this.page.waitForLoadState('domcontentloaded');
     const freshBtn = this.page.locator('#btn_startorder').first();
     await freshBtn.waitFor({ state: 'visible', timeout: 15000 });

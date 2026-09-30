@@ -1,19 +1,27 @@
 {
   "name": "carvel-playwright",
   "version": "1.0.0",
-  "description": "",
+  "description": "Carvel Playwright QA Automation Framework",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke",
+    "test:e2e": "playwright test tests/smoke/orderJourney.smoke.spec.js",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
   },
-  "keywords": [],
+  "keywords": [
+    "playwright",
+    "automation",
+    "javascript",
+    "qa"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.2",
     "dotenv": "^18.0.3",
-    "typescript": "^7.0.2"
+    "exceljs": "^4.4.0"
   }
 }

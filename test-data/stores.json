@@ -1,9 +1,13 @@
 {
   "pickupStore": {
-    "name": "",
-    "address": "26 Broadway, New York, NY 10004",
-    "searchQuery": "26 Broadway, New York, NY 10004, USA",
+    "name": "Carvel Qu Sandbox",
+    "address": "26 Broadway",
+    "city": "New York",
+    "state": "NY",
+    "zip": "10004",
     "zipCode": "10004",
-    "cityState": "New York, NY"
+    "cityState": "New York, NY",
+    "searchQuery": "26 Broadway, New York, NY 10004",
+    "fullAddress": "26 Broadway, New York, NY 10004"
   }
 }
